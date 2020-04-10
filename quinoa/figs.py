@@ -13,12 +13,12 @@ from . import colors
 def show_image(image):
     plt.close()
 
-    fig = plt.figure(figsize=(6, 6), dpi=300)
+    fig = plt.figure(figsize = (6, 6), dpi = 300)
     ax = fig.add_subplot(111)
 
     kwargs = {}
     if len(image.shape) == 2:
-        kwargs.update(dict(cmap="gray", vmin=0, vmax=255))
+        kwargs.update(dict(cmap = "gray", vmin = 0, vmax = 255))
 
     ax.imshow(image, **kwargs)
 
@@ -30,14 +30,14 @@ def show_image(image):
 
 
 def draw_text(
-    frame, position, text, font=cv.FONT_HERSHEY_SIMPLEX, size=1, color=colors.WHITE
+    frame, position, text, font = cv.FONT_HERSHEY_SIMPLEX, size = 1, thickness = 1, color = colors.WHITE
 ):
     return cv.putText(
-        frame, str(text), tuple(int(p) for p in position), font, size, color=color
+        frame, str(text), tuple(int(p) for p in position), font, size, color = color, thickness = thickness,
     )
 
 
-def draw_arrow(frame, start, end, color=colors.WHITE, thickness=1):
+def draw_arrow(frame, start, end, color = colors.WHITE, thickness = 1):
     return cv.arrowedLine(
         frame,
         tuple(int(p) for p in start),
@@ -47,30 +47,30 @@ def draw_arrow(frame, start, end, color=colors.WHITE, thickness=1):
     )
 
 
-def draw_circle(frame, center, radius, color=colors.WHITE, thickness=1):
+def draw_circle(frame, center, radius, color = colors.WHITE, thickness = 1):
     return cv.circle(
-        frame, tuple(int(p) for p in center), int(radius), color, thickness=thickness
+        frame, tuple(int(p) for p in center), int(radius), color, thickness = thickness
     )
 
 
-def draw_ellipse(frame, center, axes, rotation, color=colors.WHITE, thickness=1):
+def draw_ellipse(frame, center, axes, rotation, color = colors.WHITE, thickness = 1):
     return cv.ellipse(
         frame,
         tuple(int(p) for p in center),
         tuple(int(p) for p in axes),
-        angle=rotation,
-        startAngle=0,
-        endAngle=360,
-        color=color,
-        thickness=thickness,
+        angle = rotation,
+        startAngle = 0,
+        endAngle = 360,
+        color = color,
+        thickness = thickness,
     )
 
 
-def draw_rectangle(frame, corner, opposite, color=colors.WHITE, thickness=1):
+def draw_rectangle(frame, corner, opposite, color = colors.WHITE, thickness = 1):
     return cv.rectangle(
         frame,
         tuple(int(p) for p in corner),
         tuple(int(p) for p in opposite),
-        color=color,
-        thickness=thickness,
+        color = color,
+        thickness = thickness,
     )
