@@ -112,3 +112,40 @@ class Line:
 
     def __call__(self, x):
         return (self.slope * x) + self.intercept
+
+
+def determine_new_corners(card_corners):
+    target_side_length = max(
+        np.linalg.norm(s - e) for s, e in q.window(card_corners + [card_corners[0]])
+    )
+    tl_corner_x, tl_corner_y = card_corners[0]
+    new_corners = np.array(
+        [
+            card_corners[0],
+            [tl_corner_x + target_side_length, tl_corner_y],
+            [tl_corner_x + target_side_length, tl_corner_y + target_side_length],
+            [tl_corner_x, tl_corner_y + target_side_length],
+        ]
+    )
+
+    return new_corners
+
+
+def rectify(image, old_corners, new_corners):
+    transform_matrix = cv.getPerspectiveTransform(
+        old_corners.astype(np.float32), new_corners.astype(np.float32)
+    )
+    transformed = cv.warpPerspective(
+        image, transform_matrix, image.shape[::-1],  # y-x indexing
+    )
+
+    return transformed
+
+
+def crop(image, corners):
+    min_x = int(np.floor(np.min(corners[:, 0])))
+    max_x = int(np.ceil(np.max(corners[:, 0])))
+    min_y = int(np.floor(np.min(corners[:, 1])))
+    max_y = int(np.ceil(np.max(corners[:, 1])))
+
+    return image[min_y : max_y + 1, min_x : max_x + 1]
