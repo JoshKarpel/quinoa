@@ -34,3 +34,4 @@ from .figs import (
     draw_rectangle,
 )
 from .card import find_card_corners, Line
+from .utils import window

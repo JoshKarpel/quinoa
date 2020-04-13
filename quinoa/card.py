@@ -80,7 +80,7 @@ def find_card_corners(image_bgr):
         )
     ]
 
-    return intersections
+    return np.array(intersections)
 
 
 class Line:
