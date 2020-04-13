@@ -15,7 +15,7 @@ def read_image(path: Path):
 
 
 def write_image(image: np.array, path: Path):
-    path.parent.mkdir(parents = True, exist_ok = True)
+    path.parent.mkdir(parents=True, exist_ok=True)
     rv = cv.imwrite(str(path), image)
     logger.debug(f"Wrote image (size {image.shape}) to {path}")
     return rv

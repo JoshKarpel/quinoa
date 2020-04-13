@@ -18,7 +18,7 @@ from .colors import (
     BLUE,
     WHITE,
     TEAL,
-    PINK,
+    MAGENTA,
     BLACK,
     BGR_COLORS,
     fractions,
@@ -27,8 +27,10 @@ from .colors import (
 from .figs import (
     show_image,
     draw_text,
+    draw_line,
     draw_arrow,
     draw_circle,
     draw_ellipse,
     draw_rectangle,
 )
+from .card import find_card_corners, Line
