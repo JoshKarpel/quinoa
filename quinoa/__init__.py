@@ -36,7 +36,7 @@ from .figs import (
 from .card import (
     find_card_corners,
     determine_new_corners,
-    rectify,
+    get_rectifier,
     corners_to_slice,
     Line,
 )

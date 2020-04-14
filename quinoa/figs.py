@@ -19,6 +19,8 @@ def show_image(image):
     kwargs = {}
     if len(image.shape) == 2:
         kwargs.update(dict(cmap="gray", vmin=0, vmax=255))
+    elif len(image.shape) == 3:
+        image = colors.convert_colorspace(image, cv.COLOR_BGR2RGB)
 
     ax.imshow(image, **kwargs)
 

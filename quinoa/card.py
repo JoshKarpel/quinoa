@@ -138,15 +138,17 @@ def determine_new_corners(card_corners):
     return new_corners
 
 
-def rectify(image, old_corners, new_corners):
+def get_rectifier(old_corners, new_corners):
     transform_matrix = cv.getPerspectiveTransform(
         old_corners.astype(np.float32), new_corners.astype(np.float32)
     )
-    transformed = cv.warpPerspective(
-        image, transform_matrix, image.shape[::-1],  # y-x indexing
-    )
 
-    return transformed
+    def rectify(image):
+        return cv.warpPerspective(
+            image, transform_matrix, (image.shape[1], image.shape[0]),  # y-x indexing
+        )
+
+    return rectify
 
 
 def corners_to_slice(corners):
