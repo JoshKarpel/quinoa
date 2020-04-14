@@ -3,46 +3,50 @@ import itertools
 import cv2 as cv
 import numpy as np
 
-from .colors import convert_colorspace
+from . import colors, utils
 
 
-def find_card_corners(image_bgr):
-    # we'll work in LAB colorspace because the card is very blue, and can be
-    # isolated in the B (blue-yellow) channel
-    img_lab = convert_colorspace(image_bgr, cv.COLOR_BGR2LAB)
-    img_b = img_lab[..., 2]  # just the blue-yellow channel
+def find_card_corners(image_bgr=None, image_lab=None, image_b=None):
+    # We'll work in LAB colorspace because the card is very blue, and can be
+    # more easily isolated in the B (blue-yellow) channel.
+    if image_b is None:
+        if image_lab is None:
+            if image_bgr is None:
+                raise ValueError("Must pass one of image_bgr, image_lab, or image_b")
+            image_lab = colors.convert_colorspace(image_bgr, cv.COLOR_BGR2LAB)
+        image_b = image_lab[..., 2]  # just the blue-yellow channel
 
-    # threshold and close the blue-yellow channel to make blue blobs stand out
-    thresh, thresholded = cv.threshold(
-        cv.bitwise_not(img_b), 0, maxval=255, type=cv.THRESH_OTSU
+    # Invert, threshold, and close the blue-yellow channel to make blue blobs stand out.
+    img_inverted = cv.bitwise_not(image_b)
+    _thresh, img_thresholded = cv.threshold(
+        img_inverted, 0, maxval=255, type=cv.THRESH_OTSU
     )
-    closed = cv.morphologyEx(
-        thresholded,
+    img_closed = cv.morphologyEx(
+        img_thresholded,
         cv.MORPH_CLOSE,
         kernel=cv.getStructuringElement(cv.MORPH_ELLIPSE, (50, 50)),
     )
 
-    # select just the largest connected object in the closed image, which
-    # should be the card
-    num_labels, labels, stats, centroids = cv.connectedComponentsWithStats(
-        closed, connectivity=8
+    # Select just the largest connected object in the closed image, which should be the card.
+    num_labels, img_labels, stats, centroids = cv.connectedComponentsWithStats(
+        img_closed, connectivity=8
     )
     largest_label = max(
         range(1, num_labels), key=lambda label: stats[label, cv.CC_STAT_AREA]
     )
-    just_largest_component = np.where(labels == largest_label, closed, 0)
+    img_just_largest_component = np.where(img_labels == largest_label, img_closed, 0)
 
-    # blur the closed image, then find edges on it
+    # Blur the closed image, then find edges on it.
     edges = cv.Canny(
-        cv.GaussianBlur(just_largest_component, (21, 21), 3),
+        cv.GaussianBlur(img_just_largest_component, (21, 21), 3),
         10,
         100,
         apertureSize=7,
         L2gradient=True,
     )
 
-    # find lines in the edge image
-    # choose the 4 most-voted lines as the edges of the card
+    # Find lines in the edge image.
+    # Choose the 4 most-voted lines as the edges of the card.
     lines = cv.HoughLinesP(
         edges,
         rho=4,
@@ -51,14 +55,15 @@ def find_card_corners(image_bgr):
         minLineLength=200,
         maxLineGap=500,
     ).squeeze()
-    lines = [Line((xs, ys), (xe, ye)) for (xs, ys, xe, ye) in lines[:4]]
+    lines = lines[:4]
+    lines = [Line((xs, ys), (xe, ye)) for (xs, ys, xe, ye) in lines]
 
-    # order the lines by slope to find the horizontal and vertical lines
+    # Order the lines by slope to find the horizontal and vertical lines.
     ordered = sorted(lines, key=lambda line: abs(line.slope))
     horizontal = sorted(ordered[:2], key=lambda line: line.start_y)
     vertical = sorted(ordered[2:], key=lambda line: line.start_x)
 
-    # find intersections between the horizontal and vertical lines
+    # Find intersections between the horizontal and vertical lines.
     intersections = []
     for vline, hline in itertools.product(vertical, horizontal):
         if np.isinf(vline.slope):
@@ -67,8 +72,10 @@ def find_card_corners(image_bgr):
             x = (vline.intercept - hline.intercept) / (hline.slope - vline.slope)
         y = hline(x)
         intersections.append((x, y))
-
     intersections = np.array(intersections)
+
+    # Put the intersections in order by angle relative to their mean position.
+    # The order doesn't really matter, as long as it is consistent.
     center = np.mean(intersections, axis=0)
     rel_center = intersections - center
     angles = np.arctan2(rel_center[:, 1], rel_center[:, 0])
@@ -116,7 +123,7 @@ class Line:
 
 def determine_new_corners(card_corners):
     target_side_length = max(
-        np.linalg.norm(s - e) for s, e in q.window(card_corners + [card_corners[0]])
+        np.linalg.norm(s - e) for s, e in utils.window(card_corners + [card_corners[0]])
     )
     tl_corner_x, tl_corner_y = card_corners[0]
     new_corners = np.array(
@@ -142,10 +149,10 @@ def rectify(image, old_corners, new_corners):
     return transformed
 
 
-def crop(image, corners):
+def corners_to_slice(corners):
     min_x = int(np.floor(np.min(corners[:, 0])))
     max_x = int(np.ceil(np.max(corners[:, 0])))
     min_y = int(np.floor(np.min(corners[:, 1])))
     max_y = int(np.ceil(np.max(corners[:, 1])))
 
-    return image[min_y : max_y + 1, min_x : max_x + 1]
+    return slice(min_y, max_y + 1), slice(min_x, max_x + 1)

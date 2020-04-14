@@ -2,11 +2,11 @@ import collections
 import itertools
 
 # https://stackoverflow.com/questions/6822725/rolling-or-sliding-window-iterator
-def window(iterable, size = 2, step = 1, fillvalue = None):
+def window(iterable, size=2, step=1, fillvalue=None):
     if size < 0 or step < 1:
         raise ValueError
     it = iter(iterable)
-    q = collections.deque(itertools.islice(it, size), maxlen = size)
+    q = collections.deque(itertools.islice(it, size), maxlen=size)
     if not q:
         return  # empty iterable or size == 0
     q.extend(fillvalue for _ in range(size - len(q)))  # pad to size
@@ -17,4 +17,3 @@ def window(iterable, size = 2, step = 1, fillvalue = None):
         except StopIteration:  # Python 3.5 pep 479 support
             return
         q.extend(next(it, fillvalue) for _ in range(step - 1))
-

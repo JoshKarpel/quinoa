@@ -33,5 +33,11 @@ from .figs import (
     draw_ellipse,
     draw_rectangle,
 )
-from .card import find_card_corners, Line
+from .card import (
+    find_card_corners,
+    determine_new_corners,
+    rectify,
+    corners_to_slice,
+    Line,
+)
 from .utils import window

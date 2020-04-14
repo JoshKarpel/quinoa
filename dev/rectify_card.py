@@ -26,7 +26,7 @@ OUT = HERE / "out" / Path(__file__).stem
 def process(path):
     img_bgr = q.read_image(path)
 
-    corners = q.find_card_corners(img_bgr)
+    corners = q.find_card_corners(image_bgr=img_bgr)
 
     side_lengths = [np.linalg.norm(s - e) for s, e in q.window(corners + [corners[0]])]
     print(side_lengths)
@@ -111,12 +111,9 @@ def process(path):
 
     q.write_image(show_transformed, OUT / f"{path.stem}_1.jpg")
 
-    min_x = int(np.floor(np.min(new_corners[:, 0])))
-    max_x = int(np.ceil(np.max(new_corners[:, 0])))
-    min_y = int(np.floor(np.min(new_corners[:, 1])))
-    max_y = int(np.ceil(np.max(new_corners[:, 1])))
+    crop_slice = q.corners_to_slice(new_corners)
 
-    cropped = transformed[min_y : max_y + 1, min_x : max_x + 1]
+    cropped = transformed[crop_slice]
 
     q.write_image(cropped, OUT / f"{path.stem}_2.jpg")
 
