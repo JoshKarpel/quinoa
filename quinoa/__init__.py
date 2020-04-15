@@ -26,6 +26,8 @@ from .colors import (
 )
 from .figs import (
     show_image,
+color_labels,
+overlay_image,
     draw_text,
     draw_line,
     draw_arrow,
@@ -40,4 +42,5 @@ from .card import (
     corners_to_slice,
     Line,
 )
+from .seeds import find_not_shadows, find_seed_mask
 from .utils import window

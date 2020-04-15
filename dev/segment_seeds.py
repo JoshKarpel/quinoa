@@ -40,7 +40,7 @@ def process(path):
     thresh, img_b_thresholded = cv.threshold(
         img_b_cropped, 0, maxval=255, type=cv.THRESH_OTSU
     )
-    not_shadows = find_not_shadows(img_lab_cropped)
+    not_shadows = q.find_not_shadows(img_lab_cropped)
 
     cut_shadows = cv.bitwise_and(img_b_thresholded, not_shadows)
 
@@ -79,15 +79,6 @@ def process(path):
 
     q.write_image(img_bgr_cropped, OUT / f"{path.stem}_0.jpg")
 
-
-def find_not_shadows(img_lab_cropped, fudge_factor = 2 / 3):
-    img_l_cropped = img_lab_cropped[..., 0]
-    l_thresh, _ = cv.threshold(img_l_cropped, 0, maxval=255, type=cv.THRESH_OTSU)
-    _, not_shadows = cv.threshold(
-        img_l_cropped, l_thresh * fudge_factor, maxval=255, type=cv.THRESH_BINARY
-    )
-
-    return not_shadows
 
 
 if __name__ == "__main__":
