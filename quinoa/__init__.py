@@ -17,7 +17,7 @@ from .colors import (
     RED,
     BLUE,
     WHITE,
-    TEAL,
+    CYAN,
     MAGENTA,
     BLACK,
     BGR_COLORS,
