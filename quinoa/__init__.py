@@ -20,14 +20,16 @@ from .colors import (
     CYAN,
     MAGENTA,
     BLACK,
+    HTML_COLORS,
+    RGB_COLORS,
     BGR_COLORS,
     fractions,
     convert_colorspace,
 )
 from .figs import (
     show_image,
-color_labels,
-overlay_image,
+    color_labels,
+    overlay_image,
     draw_text,
     draw_line,
     draw_arrow,
