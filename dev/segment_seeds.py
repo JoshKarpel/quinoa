@@ -80,7 +80,6 @@ def process(path):
     q.write_image(img_bgr_cropped, OUT / f"{path.stem}_0.jpg")
 
 
-
 if __name__ == "__main__":
     image_paths = [path for path in DATA.iterdir() if path.suffix.lower() == ".jpg"]
 
