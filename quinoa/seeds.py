@@ -82,6 +82,9 @@ class Blob:
     area: float
     contour: np.array
 
+    def __repr__(self):
+        return f'Blob(label={self.label})'
+
     def __eq__(self, other):
         return id(self) == id(other)
 
