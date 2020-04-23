@@ -157,7 +157,9 @@ def process(path):
 
 
 if __name__ == "__main__":
-    image_paths = [path for path in DATA.iterdir() if path.suffix.lower() == ".jpg"]
+    image_paths = [
+        path for path in (DATA / "aus").iterdir() if path.suffix.lower() == ".jpg"
+    ]
 
     for path in image_paths:
         process(path)

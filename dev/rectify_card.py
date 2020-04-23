@@ -1,7 +1,5 @@
 import logging
 
-logging.basicConfig()
-
 from pathlib import Path
 from pprint import pprint
 import itertools
@@ -28,21 +26,7 @@ def process(path):
 
     corners = q.find_card_corners(image_bgr=img_bgr)
 
-    side_lengths = [np.linalg.norm(s - e) for s, e in q.window(corners + [corners[0]])]
-    print(side_lengths)
-    target_side_length = max(side_lengths)
-    print(target_side_length)
-
-    tl_corner_x, tl_corner_y = corners[0]
-
-    new_corners = np.array(
-        [
-            corners[0],
-            [tl_corner_x + target_side_length, tl_corner_y],
-            [tl_corner_x + target_side_length, tl_corner_y + target_side_length],
-            [tl_corner_x, tl_corner_y + target_side_length],
-        ]
-    )
+    new_corners = q.determine_new_corners(corners)
 
     show_original = img_bgr.copy()
 
@@ -119,7 +103,10 @@ def process(path):
 
 
 if __name__ == "__main__":
-    image_paths = [path for path in DATA.iterdir() if path.suffix.lower() == ".jpg"]
+    image_paths = [
+        path for path in (DATA / "aus").iterdir() if path.suffix.lower() == ".jpg"
+    ]
+    # image_paths = [DATA / 'aus' / '475.JPG']
 
-    for path in image_paths:
+    for path in tqdm(image_paths):
         process(path)

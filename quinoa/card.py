@@ -2,6 +2,7 @@ import itertools
 
 import cv2 as cv
 import numpy as np
+import sklearn.mixture
 
 from . import colors, utils
 
@@ -34,46 +35,92 @@ def find_card_corners(image_bgr=None, image_lab=None, image_b=None):
     largest_label = max(
         range(1, num_labels), key=lambda label: stats[label, cv.CC_STAT_AREA]
     )
-    img_just_largest_component = np.where(img_labels == largest_label, img_closed, 0)
+    largest_label_slice = img_labels == largest_label
+    img_just_largest_component = np.where(largest_label_slice, img_closed, 0)
 
-    # Blur the closed image, then find edges on it.
-    edges = cv.Canny(
-        cv.GaussianBlur(img_just_largest_component, (21, 21), 3),
-        10,
-        100,
-        apertureSize=7,
-        L2gradient=True,
+    # Now we do an error-checking step: in the ideal case, the thresholding above
+    # should have isolated the card, and the largest connected component of the
+    # thresholded image should therefore be the card. But in some images, especially
+    # when there is a shadow covering part of the card and a surrounding white
+    # surface, the threshold will pick up the shadow as well. In every example I've seen,
+    # the shadow makes the largest component extend to the edge of the image,
+    # so in that case we do some extra work: find the brightest component of
+    # the inverted B channel (i.e., the most blue thing in the thresholded area),
+    # and use that as the thing to find contours on instead of the raw thresholded image.
+    edge_width = 5
+    edges = np.ones_like(img_just_largest_component)
+    edges[edge_width:-edge_width, edge_width:-edge_width] = 0
+
+    if np.any(cv.bitwise_and(img_just_largest_component, edges)):
+        mix = sklearn.mixture.GaussianMixture(n_components=3)
+        clustered = mix.fit_predict(
+            X=img_inverted[largest_label_slice]
+            .ravel()
+            .reshape(-1, 1)
+        )
+        brightest_cluster = np.argmax(mix.means_)
+
+        show_clusters = np.zeros_like(image_b) - 1
+        show_clusters[largest_label_slice] = clustered
+
+        show_brightest = np.zeros_like(image_b)
+        show_brightest[show_clusters == brightest_cluster] = 255
+
+        img_for_contours = show_brightest
+    else:
+        img_for_contours = img_just_largest_component
+
+    # Find the largest, outermost contour (i.e., the card)
+    contours, hierarchy = cv.findContours(
+        img_for_contours, mode=cv.RETR_EXTERNAL, method=cv.CHAIN_APPROX_NONE
     )
+    contour = max(contours, key=lambda c: cv.contourArea(c))
 
-    # Find lines in the edge image.
-    # Choose the 4 most-voted lines as the edges of the card.
-    lines = cv.HoughLinesP(
-        edges,
-        rho=4,
-        theta=np.deg2rad(1),
-        threshold=100,
-        minLineLength=200,
-        maxLineGap=500,
+    img_contour = np.zeros_like(img_for_contours)
+    img_contour = cv.drawContours(img_contour, [contour], -1, (255,), thickness=3)
+
+    # Find lines in the contour image.
+    lines = cv.HoughLines(
+        img_contour, rho=10, theta=np.deg2rad(1), threshold=100,
     ).squeeze()
-    lines = lines[:4]
-    lines = [Line((xs, ys), (xe, ye)) for (xs, ys, xe, ye) in lines]
+    lines = [HoughLine(rho, theta) for rho, theta in lines]
 
-    # Order the lines by slope to find the horizontal and vertical lines.
-    ordered = sorted(lines, key=lambda line: abs(line.slope))
-    horizontal = sorted(ordered[:2], key=lambda line: line.start_y)
-    vertical = sorted(ordered[2:], key=lambda line: line.start_x)
+    # Find good pairs of horizontal and vertical lines.
+    # We won't let each pair be too close, to prevent getting multiple lines
+    # on the same side of the card. The limit is quite conservative, since the card
+    # usually occupies a large fraction of the image.
+    horizontal = []
+    vertical = []
+    height, width = image_bgr.shape[:2]
+    frac = 10
+    for line in lines:
+        if np.pi / 4 < line.theta < 3 * np.pi / 4:
+            if len(horizontal) == 0:
+                horizontal.append(line)
+            if np.abs(horizontal[0].rho - line.rho) > width / frac:
+                horizontal.append(line)
+        else:
+            if len(vertical) == 0:
+                vertical.append(line)
+            if np.abs(vertical[0].rho - line.rho) > height / frac:
+                vertical.append(line)
+
+        if len(horizontal) >= 2 and len(vertical) >= 2:
+            break
+
+    horizontal = horizontal[:2]
+    vertical = vertical[:2]
 
     # Find intersections between the horizontal and vertical lines.
     intersections = []
     for vline, hline in itertools.product(vertical, horizontal):
         if np.isinf(vline.slope):
-            x = vline.start_x
+            x = vline.rho
         else:
             x = (vline.intercept - hline.intercept) / (hline.slope - vline.slope)
         y = hline(x)
         intersections.append((x, y))
     intersections = np.array(intersections)
-
     # Put the intersections in order by angle relative to their mean position.
     # The order doesn't really matter, as long as it is consistent.
     center = np.mean(intersections, axis=0)
@@ -90,41 +137,31 @@ def find_card_corners(image_bgr=None, image_lab=None, image_b=None):
     return np.array(intersections)
 
 
-class Line:
-    def __init__(self, start, end):
-        self.start = np.array(start)
-        self.end = np.array(end)
+class HoughLine:
+    def __init__(self, rho, theta):
+        self.rho = np.abs(rho)
+        self.theta = theta if rho > 0 else np.pi - theta
 
-        self.slope = (self.end[-1] - self.start[-1]) / (self.end[0] - self.start[0])
-        self.intercept = self.start[1] - (self.slope * self.start[0])
-
-    @property
-    def start_x(self):
-        return self.start[0]
-
-    @property
-    def start_y(self):
-        return self.start[1]
-
-    @property
-    def end_x(self):
-        return self.end[0]
-
-    @property
-    def end_y(self):
-        return self.end[1]
+        sin = np.sin(theta)
+        if sin != 0:
+            self.slope = -np.cos(theta) / sin
+            self.intercept = rho / sin
+        else:
+            self.slope = self.intercept = np.inf
 
     def __repr__(self):
-        return f"{self.__class__.__name__}(start = {self.start}, end = {self.end}, slope = {self.slope}, intercept = {self.intercept})"
+        return f"{self.__class__.__name__}(rho = {self.rho}, theta = {self.theta}, slope = {self.slope}, intercept = {self.intercept})"
 
     def __call__(self, x):
         return (self.slope * x) + self.intercept
 
 
-def determine_new_corners(card_corners):
-    target_side_length = max(
-        np.linalg.norm(s - e) for s, e in utils.window(card_corners + [card_corners[0]])
-    )
+def determine_new_corners(card_corners, target_side_length=None):
+    if target_side_length is None:
+        target_side_length = max(
+            np.linalg.norm(s - e)
+            for s, e in utils.window(card_corners + [card_corners[0]])
+        )
     tl_corner_x, tl_corner_y = card_corners[0]
     new_corners = np.array(
         [

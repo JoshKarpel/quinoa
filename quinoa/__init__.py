@@ -45,7 +45,7 @@ from .card import (
     determine_new_corners,
     get_rectifier,
     corners_to_slice,
-    Line,
+    HoughLine,
 )
 from .seeds import find_not_shadows, find_seed_mask
 from .utils import window
