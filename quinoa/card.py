@@ -134,6 +134,8 @@ def find_card_corners(image_bgr=None, image_lab=None, image_b=None):
         )
     ]
 
+    # TODO: panic if the intersections don't make sense
+
     return np.array(intersections)
 
 

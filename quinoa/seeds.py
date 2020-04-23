@@ -60,8 +60,9 @@ def find_seed_mask(
         )
         contour = contours[0]
 
-        blob_labels[label == img_b_labels] = label
-        blobs.append(Blob(label=label, area=area, contour=contour))
+        slice = label == img_b_labels
+        blob_labels[slice] = label
+        blobs.append(Blob(label=label, slice = slice, area=area, contour=contour))
 
     return blobs, blob_labels
 
@@ -80,6 +81,7 @@ def find_not_shadows(img_lab_cropped, fudge_factor=2 / 3):
 class Blob:
     label: int
     area: float
+    slice: np.array
     contour: np.array
 
     def __repr__(self):
