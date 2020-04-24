@@ -54,9 +54,7 @@ def find_card_corners(image_bgr=None, image_lab=None, image_b=None):
     if np.any(cv.bitwise_and(img_just_largest_component, edges)):
         mix = sklearn.mixture.GaussianMixture(n_components=3)
         clustered = mix.fit_predict(
-            X=img_inverted[largest_label_slice]
-            .ravel()
-            .reshape(-1, 1)
+            X=img_inverted[largest_label_slice].ravel().reshape(-1, 1)
         )
         brightest_cluster = np.argmax(mix.means_)
 

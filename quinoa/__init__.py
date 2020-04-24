@@ -48,4 +48,5 @@ from .card import (
     HoughLine,
 )
 from .seeds import find_not_shadows, find_seed_mask
+from .segment_isolated_seeds import find_seed_blobs_with_one_seed_rough
 from .utils import window

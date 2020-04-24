@@ -62,7 +62,7 @@ def find_seed_mask(
 
         slice = label == img_b_labels
         blob_labels[slice] = label
-        blobs.append(Blob(label=label, slice = slice, area=area, contour=contour))
+        blobs.append(Blob(label=label, slice=slice, area=area, contour=contour))
 
     return blobs, blob_labels
 
@@ -85,7 +85,7 @@ class Blob:
     contour: np.array
 
     def __repr__(self):
-        return f'Blob(label={self.label})'
+        return f"Blob(label={self.label})"
 
     def __eq__(self, other):
         return id(self) == id(other)

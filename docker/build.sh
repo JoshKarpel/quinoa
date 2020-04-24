@@ -4,5 +4,5 @@ set -e
 
 TAG=$1
 
-docker build --pull --build-arg CACHEBUST="$(date +%s)" -t "${TAG}" -f docker/Dockerfile .
+docker build --pull -t "${TAG}" -f docker/Dockerfile .
 docker push "${TAG}"

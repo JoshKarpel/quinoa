@@ -1,10 +1,10 @@
 FROM continuumio/miniconda3:latest
 ENV PATH=/opt/conda/bin/:${PATH}
 
-COPY . /tmp/quinoa
+RUN conda install -y numpy scipy matplotlib opencv scikit-learn scikit-image
 
-RUN conda install -y numpy scipy matplotlib opencv scikit-learn scikit-image \
- && pip install --no-cache-dir htmap \
+COPY . /tmp/quinoa
+RUN pip install --no-cache-dir htmap \
  && pip install --no-cache-dir /tmp/quinoa
 
 ARG USER=htmap
