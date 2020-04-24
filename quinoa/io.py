@@ -9,12 +9,14 @@ logger.setLevel(logging.DEBUG)
 
 
 def read_image(path: Path):
+    path = Path(path)
     img = cv.imread(str(path))
     logger.debug(f"Loaded image from {path}")
     return img
 
 
 def write_image(image: np.array, path: Path):
+    path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
     rv = cv.imwrite(str(path), image)
     logger.debug(f"Wrote image (size {image.shape}) to {path}")

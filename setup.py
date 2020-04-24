@@ -20,4 +20,5 @@ setup(
         "Operating System :: POSIX",
     ],
     packages=find_packages(exclude=["tests", "dev"]),
+    install_requires = Path("requirements.txt").read_text().splitlines(),
 )
