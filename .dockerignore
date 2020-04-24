@@ -130,4 +130,6 @@ dmypy.json
 
 data/
 dev/
+docker/
+.ipynb_checkpoints/
 .idea/

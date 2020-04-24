@@ -1,7 +1,7 @@
 FROM continuumio/miniconda3:latest
 ENV PATH=/opt/conda/bin/:${PATH}
 
-RUN conda install -y numpy scipy matplotlib opencv scikit-learn scikit-image
+RUN conda install -c conda-forge -y numpy scipy matplotlib opencv opencv=4.2 scikit-learn scikit-image
 
 COPY . /tmp/quinoa
 RUN pip install --no-cache-dir htmap \
