@@ -14,7 +14,9 @@ DATA = HERE.parent / "data"
 OUT = HERE / "out" / Path(__file__).stem
 
 if __name__ == "__main__":
-    image_paths = [path for path in (DATA / 'aus').iterdir() if path.suffix.lower() == ".jpg"]
+    image_paths = [
+        path for path in (DATA / "aus").iterdir() if path.suffix.lower() == ".jpg"
+    ]
     # image_paths = [DATA / "aus" / "104.JPG"]
 
     for path in tqdm(image_paths):
