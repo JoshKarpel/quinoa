@@ -126,15 +126,21 @@ if __name__ == "__main__":
             ["mc", "ls", s3_bucket], capture_output=True, text=True
         ).stdout.splitlines()
     ]
-    image_paths = [[f"s3://{s3_url}/{s3_bucket}/{im}"] for im in image_names]
+    image_paths = [[f"s3://{s3_url}/{im}"] for im in image_names]
 
     htmap.settings["DOCKER.IMAGE"] = docker_image
+
+    s3_keys_root = Path.home() / ".chtc_s3"
 
     m = htmap.map(
         process,
         image_names,
         map_options=htmap.MapOptions(
-            request_memory="2GB", request_disk="1GB", input_files=image_paths,
+            request_memory="2GB",
+            request_disk="1GB",
+            input_files=image_paths,
+            aws_access_key_id_file=(s3_keys_root / "access.key").as_posix(),
+            aws_secret_access_key_file=(s3_keys_root / "secret.key").as_posix(),
         ),
     )
 
