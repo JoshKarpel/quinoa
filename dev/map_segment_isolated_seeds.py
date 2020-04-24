@@ -21,6 +21,8 @@ OUT = HERE / "out" / Path(__file__).stem
 
 
 def process(path, out_dir=None):
+    path = Path(path)
+
     if out_dir is None:
         out_dir = Path.cwd()
 
@@ -79,6 +81,7 @@ def process(path, out_dir=None):
         [img_bgr_cropped, q.overlay_image(img_bgr_cropped, show_counts), show_counts]
     ):
         out_path = out_dir / f"{path.stem}_{idx}.jpg"
+        out_paths.append(out_path)
         q.write_image(img, out_path)
 
     per_seed_path = out_dir / f"{path.stem}_per_isolated_seed.csv"
@@ -89,6 +92,8 @@ def process(path, out_dir=None):
 
     all_seed_path = out_dir / f"{path.stem}_all_seeds_rgb.csv"
     write_all_seed_rgb_csv(all_seed_path, img_seed_labels, img_bgr_cropped)
+
+    out_paths.extend([per_seed_path, avg_seed_path, all_seed_path])
 
     htmap.transfer_output_files(*out_paths)
 
