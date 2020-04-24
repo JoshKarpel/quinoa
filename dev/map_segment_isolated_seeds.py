@@ -118,15 +118,15 @@ def write_all_seed_rgb_csv(path, img_seed_labels, image_bgr_cropped):
 
 
 if __name__ == "__main__":
-    docker_image, s3_url, s3_bucket = sys.argv[1:]
+    docker_image, s3_url, s3_root, s3_bucket = sys.argv[1:]
 
     image_names = [
         line.split()[-1]
         for line in subprocess.run(
-            ["mc", "ls", s3_bucket], capture_output=True, text=True
+            ["mc", "ls", f"{s3_root}/{s3_bucket}"], capture_output=True, text=True
         ).stdout.splitlines()
     ]
-    image_paths = [[f"s3://{s3_url}/{im}"] for im in image_names]
+    image_paths = [[f"s3://{s3_url}/{s3_bucket}/{im}"] for im in image_names]
 
     htmap.settings["DOCKER.IMAGE"] = docker_image
 
