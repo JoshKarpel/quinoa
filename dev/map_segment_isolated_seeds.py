@@ -12,9 +12,6 @@ import quinoa as q
 
 import htmap
 
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
-
 HERE = Path(__file__).parent.absolute()
 DATA = HERE.parent / "data"
 OUT = HERE / "out" / Path(__file__).stem
@@ -123,7 +120,7 @@ def write_all_seed_rgb_csv(path, img_seed_labels, image_bgr_cropped):
 
 
 if __name__ == "__main__":
-    docker_image, s3_url, s3_root, s3_bucket = sys.argv[1:]
+    docker_image, s3_url, s3_root, s3_bucket, tag = sys.argv[1:]
 
     image_names = [
         line.split()[-1]
@@ -140,6 +137,7 @@ if __name__ == "__main__":
     m = htmap.map(
         process,
         image_names,
+        tag=tag,
         map_options=htmap.MapOptions(
             request_memory="2GB",
             request_disk="1GB",
